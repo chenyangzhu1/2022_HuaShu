@@ -1,0 +1,1124 @@
+    \textbf{\songti{}}
+    \begin{lstlisting}[language=python]
+
+    \end{lstlisting}
+
+
+
+
+
+    \textbf{\songti{对厚度进行Wilcox检验}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.stats as ss
+
+data = pd.read_excel("../C题数据填充.xlsx", sheet_name=0)
+data = data.values
+plt.rcParams['font.sans-serif'] = ['FangSong']
+
+# print(data)
+
+
+pre = np.zeros([25])
+lat = np.zeros([25])
+
+for i in range(25):
+    pre[i] = data[2 * i, 2]
+    lat[i] = data[2 * i + 1, 2]
+
+# print(prehoudu)
+# print(lathoudu)
+
+# myx=np.arange(25)
+#
+# plt.title("厚度",fontsize=20)
+#
+# ax=plt.plot(myx, pre, c='red', marker='.')
+# bx=plt.plot(myx, lat, c='blue', marker='.')
+# plt.show()
+
+stat, p = ss.ranksums(pre, lat)
+print(ss.ranksums(pre, lat))
+
+# RanksumsResult(statistic=-5.539513675829845, pvalue=3.0331276062597446e-08)
+
+    \end{lstlisting}
+
+    \textbf{\songti{孔隙率多因素方差分析}}
+    \begin{lstlisting}[language=python]
+import numpy as np
+from statsmodels.stats.anova import anova_lm
+from statsmodels.formula.api import ols
+import pandas as pd
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+data=pd.read_excel("C题数据填充.xlsx")
+data=data.values
+
+for i in range(50):
+    if data[i, 8] != 0:
+        data[i, 8] = int(data[i, 8] / 10 + 1)
+    data[i,9]=(int(data[i,9]-20))/5
+    data[i, 10] = (int(data[i, 10]) - 800) / 100
+    if(data[i,8]==6):
+        data[i,8]=5
+
+
+predata=np.zeros([50,4])
+
+predata[:,0]=data[:,3]
+
+
+predata[:,1]=data[:,8]
+predata[:,2]=data[:,9]
+predata[:,3]=data[:,10]
+
+predata=pd.DataFrame(predata,columns=['孔隙率','插层率','接收距离','热风速度'])
+
+model = ols("孔隙率 ~插层率+接收距离+热风速度+插层率:接收距离+插层率*热风速度+接收距离*热风速度+插层率*接收距离*热风速度", data=predata)
+data = model.fit()
+print(anova_lm(data))
+
+# hsd=pairwise_tukeyhsd(predata['孔隙率'],predata['插层率'])
+# print(hsd)
+    \end{lstlisting}
+
+
+    \textbf{\songti{透气性事后分析}}
+    \begin{lstlisting}[language=python]
+import numpy as np
+from statsmodels.stats.anova import anova_lm
+from statsmodels.formula.api import ols
+import pandas as pd
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+data=pd.read_excel("C题数据填充.xlsx")
+data=data.values
+
+for i in range(50):
+    if data[i, 8] != 0:
+        data[i, 8] = int(data[i, 8] / 10 + 1)
+    data[i,9]=(int(data[i,9]-20))/5
+    data[i, 10] = (int(data[i, 10]) - 800) / 100
+    if(data[i,8]==6):
+        data[i,8]=5
+
+
+
+predata=np.zeros([50,4])
+
+predata[:,0]=data[:,7]
+
+
+predata[:,1]=data[:,8]
+predata[:,2]=data[:,9]
+predata[:,3]=data[:,10]
+
+predata=pd.DataFrame(predata,columns=['透气性','插层率','接收距离','热风速度'])
+
+model = ols("透气性 ~插层率+接收距离+热风速度+插层率:接收距离+插层率*热风速度+接收距离*热风速度+插层率*接收距离*热风速度", data=predata)
+data = model.fit()
+print(anova_lm(data))
+
+# hsd=pairwise_tukeyhsd(predata['透气性'],predata['插层率'])
+# print(hsd)
+
+hsd = pairwise_tukeyhsd(groups=predata['插层率'], endog=predata['透气性']).summary()
+
+print(hsd)
+
+    \end{lstlisting}
+
+
+    \textbf{\songti{透气性散点图绘制}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+data=pd.read_excel("../C题数据填充.xlsx",sheet_name=0)
+data=data.values
+plt.rcParams['font.sans-serif']=['FangSong']
+
+# print(data)
+
+
+pre=np.zeros([25])
+lat=np.zeros([25])
+
+for i in range(25):
+    pre[i]=data[2 * i, 7]
+    lat[i]=data[2 * i + 1, 7]
+
+# print(prehoudu)
+# print(lathoudu)
+
+myx=np.arange(25)
+
+plt.title("透气性",fontsize=20)
+
+ax=plt.plot(myx, pre, c='red', marker='.')
+bx=plt.plot(myx, lat, c='blue', marker='.')
+plt.show()
+
+res=np.zeros([2,25])
+res[0,:]=pre[:]
+res[1,:]=lat[:]
+print(res)
+np.savetxt("透气性数据.csv",res,delimiter=',')
+    \end{lstlisting}
+
+
+    \textbf{\songti{第二问厚度}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from scipy.optimize import curve_fit
+plt.rcParams['font.sans-serif'] = ['FangSong']
+
+x = pd.read_csv("data3_接受距离.csv", header=None)
+x = x.values
+
+y = pd.read_csv("data3_热风速度.csv", header=None)
+y = y.values
+
+myx=np.zeros([2,25])
+myx[0]=x.flatten()
+myx[1]=y.flatten()
+
+z = pd.read_csv("data3求平均.csv", header=None)
+z = z.values
+myz=z[:,0]
+myz=myz.flatten()
+
+# plt.plot(myx[0],myz,c='red')
+
+
+def fun(x,k0,k1,k2):
+    return k0*x[0,:]+k1*x[1,:]+k2
+
+popt, pcov=curve_fit(fun, myx, myz)
+
+
+y2=np.zeros([25])
+for i in range(25):
+    y2[i]=popt[0]*myx[0,i]+popt[1]*myx[1,i]+popt[2]
+
+# plt.plot(myx[0],y2,c='blue')
+# plt.show()
+print(popt)
+
+
+def __sst(y_no_fitting):
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list =[(y - y_mean)**2 for y in y_no_fitting]
+    sst = sum(s_list)
+    return sst
+
+
+def __ssr(y_fitting, y_no_fitting):
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list =[(y - y_mean)**2 for y in y_fitting]
+    ssr = sum(s_list)
+    return ssr
+
+
+def __sse(y_fitting, y_no_fitting):
+    s_list = [(y_fitting[i] - y_no_fitting[i])**2 for i in range(len(y_fitting))]
+    sse = sum(s_list)
+    return sse
+
+
+def goodness_of_fit(y_fitting, y_no_fitting):
+    SSR = __ssr(y_fitting, y_no_fitting)
+    SST = __sst(y_no_fitting)
+    rr = SSR /SST
+    return rr
+
+print(goodness_of_fit(y2,myz))
+# print(pcov)
+
+p00=popt[0]
+p10=popt[1]
+p01=popt[2]
+fig = plt.figure()
+ax = plt.axes(projection="3d")
+
+plotx=np.arange(start=20,stop=40,step=0.5)
+ploty=np.arange(start=800,stop=1200,step=10)
+plotx=plotx.reshape([-1,1])
+# ploty=ploty.reshape([-1,1])
+Z=popt[0]*plotx+popt[1]*ploty+popt[2]
+
+ax.plot_surface(plotx,ploty,Z,alpha=0.8, cstride=1, rstride = 1, cmap='copper')
+
+ax.scatter(myx[0],myx[1],myz,marker='.')
+
+
+
+pre=pd.read_excel("pre.xlsx",header=None)
+pre=pre.values
+
+pre_results=np.zeros([8])
+for i in range(8):
+    x=pre[i,0]
+    y=pre[i,1]
+    pre_results[i]=popt[0]*x+popt[1]*y+popt[2]
+
+ax.scatter(pre[:,0],pre[:,1],pre_results,marker='.',c='darkred')
+ax.set_zlabel('厚度（mm）',fontsize=13)
+# ax.view_init(0, 10)
+plt.xlabel('接收距离(cm)',fontsize=13)
+plt.ylabel('热风速度(r/min)',fontsize=13)
+plt.show()
+
+
+np.savetxt("厚度预测结果.csv",pre_results,delimiter=',')
+    \end{lstlisting}
+
+
+    \textbf{\songti{第三问过滤效率-透气性绘图}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from scipy.optimize import curve_fit
+
+data = pd.read_csv("data3求平均.csv", header=None)
+data = data.values
+
+x=data[:,4]
+x=x.flatten()
+y=data[:,5]
+y=y.flatten()
+def fun(X,p1,p2):
+    return p1*X+p2
+
+
+popt, pcov=curve_fit(fun, x, y)
+
+p1=popt[0]
+p2=popt[1]
+
+
+
+y2=np.zeros([25])
+
+for i in range(25):
+    y2[i]=p1*x[i]+p2
+print(popt)
+
+# #################################拟合优度R^2的计算######################################
+def __sst(y_no_fitting):
+    """
+    计算SST(total sum of squares) 总平方和
+    :param y_no_predicted: List[int] or array[int] 待拟合的y
+    :return: 总平方和SST
+    """
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list =[(y - y_mean)**2 for y in y_no_fitting]
+    sst = sum(s_list)
+    return sst
+
+
+def __ssr(y_fitting, y_no_fitting):
+    """
+    计算SSR(regression sum of squares) 回归平方和
+    :param y_fitting: List[int] or array[int]  拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 回归平方和SSR
+    """
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list =[(y - y_mean)**2 for y in y_fitting]
+    ssr = sum(s_list)
+    return ssr
+
+
+def __sse(y_fitting, y_no_fitting):
+    """
+    计算SSE(error sum of squares) 残差平方和
+    :param y_fitting: List[int] or array[int] 拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 残差平方和SSE
+    """
+    s_list = [(y_fitting[i] - y_no_fitting[i])**2 for i in range(len(y_fitting))]
+    sse = sum(s_list)
+    return sse
+
+
+def goodness_of_fit(y_fitting, y_no_fitting):
+    """
+    计算拟合优度R^2
+    :param y_fitting: List[int] or array[int] 拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 拟合优度R^2
+    """
+    SSR = __ssr(y_fitting, y_no_fitting)
+    SST = __sst(y_no_fitting)
+    rr = SSR /SST
+    return rr
+
+print(goodness_of_fit(y2,y))
+
+
+
+plotx=np.arange(start=40,stop=85,step=1)
+
+ploty=p1*plotx+p2
+
+plt.plot(plotx,ploty)
+plt.rcParams['font.sans-serif'] = ['FangSong']
+plt.rcParams['axes.unicode_minus'] = False
+plt.scatter(x,y,marker='.')
+plt.xlabel('过滤效率（%）',fontsize=13)
+plt.ylabel('透气性 mm/s',fontsize=13)
+plt.show()
+    \end{lstlisting}
+
+
+    \textbf{\songti{第三问结构变量与过滤效率关系}}
+    \begin{lstlisting}[language=python]
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+from scipy.optimize import curve_fit
+
+data = pd.read_excel("主成分分析.xlsx", header=None)
+
+data = data.values
+
+myx1 = data[:, 0]
+
+myx2 = data[:, 1]
+
+myX = np.zeros([2, 25])
+myX[0, :] = myx1
+myX[1, :] = myx2
+
+target = pd.read_csv("data3求平均.csv", header=None)
+target = target.values
+
+my_y = target[:, 4]
+
+my_y = my_y[:22]
+myX = myX[:, :22]
+
+
+def fun(X, p00, p10, p01, p20, p11):
+    x = X[0, :]
+    y = X[1, :]
+
+    return p00 + p10 * x + p01 * y + p20 * x ** 2 + p11 * x * y
+
+
+popt, pcov = curve_fit(fun, myX, my_y)
+
+p00 = popt[0]
+p10 = popt[1]
+p01 = popt[2]
+p20 = popt[3]
+p11 = popt[4]
+y2 = np.zeros([22])
+
+for i in range(22):
+    x = myX[0, i]
+    y = myX[1, i]
+    y2[i] = p00 + p10 * x + p01 * y + p20 * x ** 2 + p11 * x * y
+
+print(popt)
+
+
+# #################################拟合优度R^2的计算######################################
+def __sst(y_no_fitting):
+    """
+    计算SST(total sum of squares) 总平方和
+    :param y_no_predicted: List[int] or array[int] 待拟合的y
+    :return: 总平方和SST
+    """
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list = [(y - y_mean) ** 2 for y in y_no_fitting]
+    sst = sum(s_list)
+    return sst
+
+
+def __ssr(y_fitting, y_no_fitting):
+    """
+    计算SSR(regression sum of squares) 回归平方和
+    :param y_fitting: List[int] or array[int]  拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 回归平方和SSR
+    """
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list = [(y - y_mean) ** 2 for y in y_fitting]
+    ssr = sum(s_list)
+    return ssr
+
+
+def __sse(y_fitting, y_no_fitting):
+    """
+    计算SSE(error sum of squares) 残差平方和
+    :param y_fitting: List[int] or array[int] 拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 残差平方和SSE
+    """
+    s_list = [(y_fitting[i] - y_no_fitting[i]) ** 2 for i in range(len(y_fitting))]
+    sse = sum(s_list)
+    return sse
+
+
+def goodness_of_fit(y_fitting, y_no_fitting):
+    """
+    计算拟合优度R^2
+    :param y_fitting: List[int] or array[int] 拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 拟合优度R^2
+    """
+    SSR = __ssr(y_fitting, y_no_fitting)
+    SST = __sst(y_no_fitting)
+    rr = SSR / SST
+    return rr
+
+
+print(goodness_of_fit(y2, my_y))
+
+fig = plt.figure()
+ax = plt.axes(projection="3d")
+
+plotx = np.arange(start=-2.5, stop=1.5, step=0.1)
+ploty = np.arange(start=-2, stop=2, step=0.1)
+plotx = plotx.reshape([-1, 1])
+Z = p00 + p10 * plotx + p01 * ploty + p20 * plotx ** 2 + p11 * plotx * ploty
+ax.plot_surface(plotx, ploty, Z, alpha=0.8, cstride=1, rstride=1, cmap='copper')
+ax.scatter(myX[0], myX[1], my_y, marker='.')
+ax.view_init(30, 30)
+
+plt.rcParams['font.sans-serif'] = ['FangSong']
+plt.rcParams['axes.unicode_minus'] = False
+
+ax.set_zlabel('过滤效率（%）', fontsize=13)
+# ax.view_init(0, 10)
+plt.xlabel('主成分1', fontsize=13)
+plt.ylabel('主成分2', fontsize=13)
+plt.show()
+
+    \end{lstlisting}
+
+
+    \textbf{\songti{第三问产品性能热图}}
+    \begin{lstlisting}[language=python]
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy.stats import spearmanr, pearsonr
+
+plt.rcParams['font.sans-serif'] = ['FangSong']
+plt.rcParams['axes.unicode_minus'] = False
+z = pd.read_csv("data3求平均.csv", header=None)
+z = z.values
+
+data = z[:, 3:6]
+
+res = pd.DataFrame(data, columns=['过滤阻力',
+                                  '过滤效率',
+                                  '透气性'])
+
+corr = res.corr(method='pearson')
+
+sns.heatmap(corr, annot=True, vmax=1, vmin=-1, xticklabels=True, yticklabels=True,
+            square=True, cmap="YlGnBu")
+
+plt.show()
+
+
+print(pearsonr(res['过滤阻力'], res['过滤效率']))
+print(pearsonr(res['过滤阻力'], res['透气性']))
+print(pearsonr(res['过滤效率'], res['透气性']))
+
+    \end{lstlisting}
+
+
+    \textbf{\songti{主成分分析}}
+    \begin{lstlisting}[language=python]
+import numpy as np
+import pandas as pd
+from numpy.linalg import eig
+from sklearn.datasets import load_iris
+from sklearn.decomposition import PCA
+
+data = pd.read_csv("data3求平均.csv", header=None)
+data = data.values
+x = data[:, 0:3]
+
+for i in range(25):
+    x[i, 0] = (x[i, 0] - 2.6076) / 0.4792901
+    x[i, 1] = (x[i, 1] - 95.88) / 0.798759455
+    x[i, 2] = (x[i, 2] - 86.6072) / 1.218528894
+
+x_pca = np.zeros([25, 2])
+
+for i in range(25):
+    x_pca[i, 0] = -0.650110206 * x[i, 0] - 0.612391423 * x[i, 1] + 0.449814923 * x[i, 2]
+    x_pca[i, 1] = 0.190957569 * x[i, 0] + 0.441310513 * x[i, 1] + 0.87680114 * x[i, 2]
+
+print(x_pca)
+    \end{lstlisting}
+
+
+    \textbf{\songti{逻辑增长模型}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from scipy.optimize import curve_fit
+
+x = pd.read_csv("data3_接受距离.csv", header=None)
+x = x.values
+
+y = pd.read_csv("data3_热风速度.csv", header=None)
+y = y.values
+
+myx = np.zeros([2, 25])
+myx[0] = x.flatten() / 10
+myx[1] = y.flatten() / 1000
+
+z = pd.read_csv("data3求平均.csv", header=None)
+z = z.values
+myz = z[:, 4]
+myz = myz.flatten()
+
+
+def fun(X, k1, k2, k3, k4):
+    x = X[0, :]
+    y = X[1, :]
+    return 25 / (1 + 1.5 * np.exp(-k1 * x)) + 25 / (1 + 1.5 * np.exp(-k2 * y)) + 50 / (
+            1 + 1.5 * np.exp(-k3 * x - k4 * y))
+
+
+init = [15.9, 3.281, -5.605, 10.77]
+# init = [[15.9, 2.29426109, -3.9162163, 6.95940933]]
+popt, pcov = curve_fit(fun, myx, myz, p0=init)
+
+print(popt)
+
+y2 = np.zeros([25])
+k1 = popt[0]
+k2 = popt[1]
+k3 = popt[2]
+k4 = popt[3]
+
+for i in range(25):
+    x = myx[0, i]
+    y = myx[1, i]
+    y2[i] = 25 / (1 + 1.5 * np.exp(-k1 * x)) + 25 / (1 + 1.5 * np.exp(-k2 * y)) + 50 / (
+            1 + 1.5 * np.exp(-k3 * x - k4 * y))
+
+
+# #################################拟合优度R^2的计算######################################
+def __sst(y_no_fitting):
+    """
+    计算SST(total sum of squares) 总平方和
+    :param y_no_predicted: List[int] or array[int] 待拟合的y
+    :return: 总平方和SST
+    """
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list = [(y - y_mean) ** 2 for y in y_no_fitting]
+    sst = sum(s_list)
+    return sst
+
+
+def __ssr(y_fitting, y_no_fitting):
+    """
+    计算SSR(regression sum of squares) 回归平方和
+    :param y_fitting: List[int] or array[int]  拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 回归平方和SSR
+    """
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list = [(y - y_mean) ** 2 for y in y_fitting]
+    ssr = sum(s_list)
+    return ssr
+
+
+def __sse(y_fitting, y_no_fitting):
+    """
+    计算SSE(error sum of squares) 残差平方和
+    :param y_fitting: List[int] or array[int] 拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 残差平方和SSE
+    """
+    s_list = [(y_fitting[i] - y_no_fitting[i]) ** 2 for i in range(len(y_fitting))]
+    sse = sum(s_list)
+    return sse
+
+
+def goodness_of_fit(y_fitting, y_no_fitting):
+    """
+    计算拟合优度R^2
+    :param y_fitting: List[int] or array[int] 拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 拟合优度R^2
+    """
+    SSR = __ssr(y_fitting, y_no_fitting)
+    SST = __sst(y_no_fitting)
+    rr = SSR / SST
+    return rr
+
+
+print(goodness_of_fit(y2, myz))
+plt.rcParams['font.sans-serif'] = ['FangSong']
+plt.rcParams['axes.unicode_minus'] = False
+fig = plt.figure()
+ax = plt.axes(projection="3d")
+
+plotx = np.arange(start=0, stop=100, step=1)
+ploty = np.arange(start=0, stop=2000, step=20)
+plotx = plotx.reshape([-1, 1])
+
+Z = 25 / (1 + 1.5 * np.exp(-k1 * plotx/10)) + 25 / (1 + 1.5 * np.exp(-k2 * ploty/1000)) + 50 / (
+        1 + 1.5 * np.exp(-k3 * plotx/10 - k4 * ploty/1000))
+
+ax.plot_surface(plotx,ploty,Z,alpha=0.8, cstride=1, rstride = 1, cmap='rainbow')
+ax.scatter(myx[0]*10,myx[1]*1000,myz,marker='.',c='black')
+
+ax.set_zlabel('过滤效率（%）',fontsize=13)
+ax.view_init(20, -100)
+plt.xlabel('接收距离(cm)',fontsize=13)
+plt.ylabel('热风速度(r/min)',fontsize=13)
+plt.show()
+
+    \end{lstlisting}
+
+
+    \textbf{\songti{第三问收敛性绘图}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+
+def obj(X):
+    x = X[0]
+    y = X[1]
+    k1 = 15.9
+    k2 = 3.27944218
+    k3 = -5.60411769
+    k4 = 10.76586634
+    return -(25 / (1 + 1.5 * np.exp(-k1 * x / 10)) + 25 / (1 + 1.5 * np.exp(-k2 * y / 1000)) + 50 / (
+            1 + 1.5 * np.exp(-k3 * x / 10 - k4 * y / 1000)))
+X=np.zeros([29,2])
+X[0,0]=10
+X[0,1]=1000
+for i in range(28):
+    data=pd.read_csv("中间结果"+str(i)+".csv",header=None)
+    X[i+1,:]=data.values.flatten()
+
+Y=np.zeros([29,1])
+
+for i in range(29):
+    Y[i,0]=obj(X[i,:])
+plt.rcParams['font.sans-serif'] = ['FangSong']
+plt.rcParams['axes.unicode_minus'] = False
+idx=np.arange(29)
+plt.plot(idx,-Y,marker='.')
+plt.xlabel('迭代次数(次)',fontsize=13)
+plt.ylabel('过滤效率(%)',fontsize=13)
+plt.show()
+
+
+    \end{lstlisting}
+
+    \textbf{\songti{第四问工艺参数和过滤阻力关系}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from scipy.optimize import curve_fit
+
+x = pd.read_csv("data3_接受距离.csv", header=None)
+x = x.values
+
+y = pd.read_csv("data3_热风速度.csv", header=None)
+y = y.values
+
+myx = np.zeros([2, 25])
+myx[0] = x.flatten()
+myx[1] = y.flatten()
+
+z = pd.read_csv("data3求平均.csv", header=None)
+z = z.values
+myz = z[:, 3]
+myz = myz.flatten()
+
+
+def fun(X, p00, p10, p01, p20, p11):
+    x = X[0, :]
+    y = X[1, :]
+
+    return p00 + p10 * x + p01 * y + p20 * x ** 2 + p11 * x * y
+
+
+popt, pcov = curve_fit(fun, myx, myz)
+
+p00 = popt[0]
+p10 = popt[1]
+p01 = popt[2]
+p20 = popt[3]
+p11 = popt[4]
+y2 = np.zeros([25])
+
+for i in range(25):
+    x = myx[0, i]
+    y = myx[1, i]
+    y2[i] = p00 + p10 * x + p01 * y + p20 * x ** 2 + p11 * x * y
+
+print(popt)
+
+
+# #################################拟合优度R^2的计算######################################
+def __sst(y_no_fitting):
+    """
+    计算SST(total sum of squares) 总平方和
+    :param y_no_predicted: List[int] or array[int] 待拟合的y
+    :return: 总平方和SST
+    """
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list = [(y - y_mean) ** 2 for y in y_no_fitting]
+    sst = sum(s_list)
+    return sst
+
+
+def __ssr(y_fitting, y_no_fitting):
+    """
+    计算SSR(regression sum of squares) 回归平方和
+    :param y_fitting: List[int] or array[int]  拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 回归平方和SSR
+    """
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list = [(y - y_mean) ** 2 for y in y_fitting]
+    ssr = sum(s_list)
+    return ssr
+
+
+def __sse(y_fitting, y_no_fitting):
+    """
+    计算SSE(error sum of squares) 残差平方和
+    :param y_fitting: List[int] or array[int] 拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 残差平方和SSE
+    """
+    s_list = [(y_fitting[i] - y_no_fitting[i]) ** 2 for i in range(len(y_fitting))]
+    sse = sum(s_list)
+    return sse
+
+
+def goodness_of_fit(y_fitting, y_no_fitting):
+    """
+    计算拟合优度R^2
+    :param y_fitting: List[int] or array[int] 拟合好的y值
+    :param y_no_fitting: List[int] or array[int] 待拟合y值
+    :return: 拟合优度R^2
+    """
+    SSR = __ssr(y_fitting, y_no_fitting)
+    SST = __sst(y_no_fitting)
+    rr = SSR / SST
+    return rr
+
+
+print(goodness_of_fit(y2, myz))
+
+fig = plt.figure()
+ax = plt.axes(projection="3d")
+
+plotx = np.linspace(start=20, stop=40, num=50)
+ploty = np.linspace(start=800, stop=1400, num=50)
+plotx = plotx.reshape([-1, 1])
+
+Z = p00 + p10 * plotx + p01 * ploty + p20 * plotx ** 2 + p11 * plotx * ploty
+
+ax.plot_surface(plotx, ploty, Z, alpha=0.8, cstride=1, rstride=1, cmap='copper')
+ax.scatter(myx[0], myx[1], myz, marker='.')
+
+plt.rcParams['font.sans-serif'] = ['FangSong']
+plt.rcParams['axes.unicode_minus'] = False
+ax.set_zlabel('过滤阻力Pa', fontsize=13)
+# ax.view_init(0, 10)
+plt.xlabel('接收距离(cm)', fontsize=13)
+plt.ylabel('热风速度(r/min)', fontsize=13)
+plt.show()
+
+
+    \end{lstlisting}
+
+
+    \textbf{\songti{第四问结果}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import minimize
+
+
+def obj(X):
+    x = X[0]
+    y = X[1]
+    zuli = 4.05950528e+01 + 8.46631161e-01 * x - \
+           1.93679792e-02 * y - 2.29699455e-02 * x ** 2 \
+           + 1.36511669e-04 * x * y
+    zuli /= 36.47
+
+    k1 = 15.9
+    k2 = 3.27944218
+    k3 = -5.60411769
+    k4 = 10.76586634
+    xiaolv = 25 / (1 + 1.5 * np.exp(-k1 * x / 10)) \
+             + 25 / (1 + 1.5 * np.exp(-k2 * y / 1000)) \
+             + 50 / (1 + 1.5 * np.exp(-k3 * x / 10 - k4 * y / 1000))
+
+    xiaolv /= 82.98
+
+    return -0.5 * xiaolv + 0.5 * zuli
+
+
+myobj = lambda x: obj(x)
+
+
+# def con1(X):
+#     x = X[0]
+#     y = X[1]
+#     return -0.8648 + 0.05428 * x + 0.001844 * y
+
+def con2(X):
+    x = X[0]
+    y = X[1]
+    return -(-0.8648 + 0.05428 * x + 0.001844 * y - 3)
+
+
+def con3(X):
+    x = X[0]
+    y = X[1]
+    return 43.96 + 1.149 * x + 0.05897 * y - 0.02063 * x ** 2 + 2e-5 * x * y - 85 - 3.114e-5 * y ** 2
+
+
+mycons = (
+    {'type': 'ineq', 'fun': lambda x: con2(x)},
+    {'type': 'ineq', 'fun': lambda x: con3(x)}
+)
+bound = []
+
+bound.append((15, 45))
+bound.append((600, 1300))
+bound = tuple(bound)
+xcall = []
+
+# x0 = np.arange(start=15, stop=45, step=3)
+# x1 = np.arange(start=600, stop=1300, step=10)
+#
+# pre = 900
+# preinit = []
+# idx = np.arange(700)
+# maxidx = np.zeros([700])
+#
+# p = 0
+# for i in range(len(x0)):
+#     for j in range(len(x1)):
+#         init = [x0[i], x1[j]]
+#         # print(init)
+#         res = minimize(myobj, init, bounds=bound, constraints=mycons, options={'disp': True, 'maxiter': 200},
+#                        callback=xcall.append)
+#         if pre >= res.fun:
+#             preinit = init
+#             pre = res.fun
+#         maxidx[p] = -pre
+#         p += 1
+#         # print(res.fun, '\n', res.success, '\n', res.x, res.message)  # 输出最优值、求解状态、最优解
+# print(pre)
+# print(preinit)
+# plt.rcParams['font.sans-serif'] = ['FangSong']
+# plt.rcParams['axes.unicode_minus'] = False
+#
+# plt.xlabel('搜索次数(次)', fontsize=13)
+# # plt.ylabel('过滤效率(%)',fontsize=13)
+#
+# plt.plot(idx, maxidx, marker='.')
+#
+# plt.show()
+#
+# res = minimize(myobj, [18, 890], bounds=bound, constraints=mycons, options={'disp': True, 'maxiter': 200},
+#                callback=xcall.append)
+# print(res.fun, '\n', res.success, '\n', res.x, res.message)  # 输出最优值、求解状态、最优解
+
+x0 = [18, 890]
+
+res = minimize(myobj, x0, bounds=bound, constraints=mycons, options={'disp': True, 'maxiter': 200},
+               callback=xcall.append)
+
+for i in range(len(xcall)):
+    np.savetxt("中间结果" + str(i) + ".csv", xcall[i])
+
+print(res.fun, '\n', res.success, '\n', res.x, res.message)  # 输出最优值、求解状态、最优解
+
+    \end{lstlisting}
+
+
+    \textbf{\songti{第四问最优解收敛绘图}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+def obj(X):
+    x = X[0]
+    y = X[1]
+    zuli = 4.05950528e+01 + 8.46631161e-01 * x - \
+           1.93679792e-02 * y - 2.29699455e-02 * x ** 2 \
+           + 1.36511669e-04 * x * y
+    zuli /= 36.47
+
+    k1 = 15.9
+    k2 = 3.27944218
+    k3 = -5.60411769
+    k4 = 10.76586634
+    xiaolv = 25 / (1 + 1.5 * np.exp(-k1 * x / 10)) \
+             + 25 / (1 + 1.5 * np.exp(-k2 * y / 1000)) \
+             + 50 / (1 + 1.5 * np.exp(-k3 * x / 10 - k4 * y / 1000))
+
+    xiaolv /= 82.98
+
+    return zuli,xiaolv
+
+X=np.zeros([20,2])
+X[0,0]=18
+X[0,1]=890
+
+for i in range(19):
+    data=pd.read_csv("中间结果"+str(i)+".csv",header=None)
+    X[i+1,:]=data.values.flatten()
+
+
+Zuli=np.zeros([20,1])
+Xiaolv=np.zeros([20,1])
+for i in range(20):
+    Zuli[i,:],Xiaolv[i,:]=obj(X[i,:])
+
+
+plt.rcParams['font.sans-serif'] = ['FangSong']
+plt.rcParams['axes.unicode_minus'] = False
+
+idx=np.arange(20)
+
+plt.plot(idx,Zuli*36.47,marker='.')
+
+plt.xlabel('迭代次数(次)',fontsize=13)
+plt.ylabel('过滤阻力Pa',fontsize=13)
+plt.show()
+
+plt.plot(idx,Xiaolv*82.98,marker='.')
+plt.xlabel('迭代次数(次)',fontsize=13)
+plt.ylabel('过滤效率（%）',fontsize=13)
+plt.show()
+
+    \end{lstlisting}
+
+
+    \textbf{\songti{可行域图像绘制}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+
+# 作点
+x = np.linspace(-70, 120, 1000)
+y = np.linspace(-300, 2500, 1000)
+
+# 构造网格
+x, y = np.meshgrid(x, y)
+z = x
+# 上式等号右边即为要绘制的方程，方程的右边等于0
+# 绘制等高线,8表示等高线数量加1
+plt.contour(x, y, z, 0)
+
+z = x - 100
+plt.contour(x, y, z, 0)
+
+z = y - 2000
+plt.contour(x, y, z, 0)
+
+z = y
+plt.contour(x, y, z, 0)
+
+z = -0.8648 + 0.05428 * x + 0.001844 * y
+plt.contour(x, y, z, 0)
+
+z = -0.8648 + 0.05428 * x + 0.001844 * y - 3
+plt.contour(x, y, z, 0)
+
+z = 43.96 + 1.149 * x + 0.05897 * y - 0.02063 * x ** 2 + 2e-5 * x * y - 85 - 3.114e-5 * y ** 2
+plt.contour(x, y, z, 0)
+plt.rcParams['font.sans-serif'] = ['FangSong']
+plt.rcParams['axes.unicode_minus'] = False
+plt.xlabel('接收距离(cm)',fontsize=13)
+plt.ylabel('热风速度(r/min)',fontsize=13)
+# z = 43.96 + 1.149 * x + 0.05897 * y - 0.02063 * x ** 2 + 2e-5 * x * y -100- 3.114e-5 * y ** 2
+# plt.contour(x, y, z, 0)
+
+plt.show()
+
+    \end{lstlisting}
+
+    \textbf{\songti{灵敏性检验计算}}
+    \begin{lstlisting}[language=python]
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import minimize
+
+
+#### 压缩回弹性
+def yasuohuitan(X):
+    popt = [4.39577299e+01, 1.15386219e+00, 5.88017537e-02, - 2.07223498e-02, 2.06636726e-05, - 3.10795521e-05]
+    p00 = popt[0]
+    p10 = popt[1]
+    p01 = popt[2]
+    p20 = popt[3]
+    p11 = popt[4]
+    p02 = popt[5]
+    x = X[0]
+    y = X[1]
+    return p00 + p10 * x + p01 * y + p20 * x ** 2 + p11 * x * y + p02 * y ** 2
+
+
+#### 厚度
+def houdu(X):
+    popt = [0.05419093, 0.00184155, -0.86020508]
+    return popt[0] * X[0] + popt[1] * X[1] + popt[2]
+
+
+def obj(X):
+    x = X[0]
+    y = X[1]
+    zuli = 4.05950528e+01 + 8.46631161e-01 * x - \
+           1.93679792e-02 * y - 2.29699455e-02 * x ** 2 \
+           + 1.36511669e-04 * x * y
+    zuli /= 36.47
+
+    k1 = 15.9
+    k2 = 3.27944218
+    k3 = -5.60411769
+    k4 = 10.76586634
+    xiaolv = 25 / (1 + 1.5 * np.exp(-k1 * x / 10)) \
+             + 25 / (1 + 1.5 * np.exp(-k2 * y / 1000)) \
+             + 50 / (1 + 1.5 * np.exp(-k3 * x / 10 - k4 * y / 1000))
+
+    xiaolv /= 82.98
+
+    return xiaolv * 82.98, zuli * 36.47
+
+
+x = [ 17.97813515 ,1149.62005709]
+print("压缩回弹，厚度，过滤效率，过滤阻力")
+print(yasuohuitan(x))
+print(houdu(x))
+print(obj(x))
+
+    \end{lstlisting}

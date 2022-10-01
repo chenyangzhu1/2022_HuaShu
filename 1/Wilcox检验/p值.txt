@@ -1,0 +1,12 @@
+厚度
+# RanksumsResult(statistic=-5.539513675829845, pvalue=3.0331276062597446e-08)
+孔隙率
+# RanksumsResult(statistic=-5.743243600860365, pvalue=9.287995833277978e-09)
+压缩回弹
+# RanksumsResult(statistic=-3.560422975533368, pvalue=0.0003702579082898629)
+过滤阻力
+# RanksumsResult(statistic=1.3484980752020113, pvalue=0.17749823883212645)
+过滤效率
+# RanksumsResult(statistic=-2.153716350322637, pvalue=0.03126242312068113)
+透气性
+# RanksumsResult(statistic=-1.154469575172945, pvalue=0.2483077051280277)
